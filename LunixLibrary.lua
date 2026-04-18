@@ -7,9 +7,9 @@ local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 local player = Players.LocalPlayer
 
-local COL_BLUE = Color3.fromRGB(0, 80, 255)
-local COL_CYAN = Color3.fromRGB(0, 210, 255)
-local BG_THEME = Color3.fromRGB(10, 5, 18)
+local COL_BLUE = Color3.fromRGB(0, 120, 255)
+local COL_CYAN = Color3.fromRGB(0, 255, 255)
+local BG_THEME = Color3.fromRGB(10, 15, 35)
 
 local sg = Instance.new("ScreenGui")
 sg.Name = "LunixLibrary_V2"
@@ -19,23 +19,37 @@ if not pcall(function() sg.Parent = CoreGui end) then
     sg.Parent = player:WaitForChild("PlayerGui")
 end
 
+-- Variables Globales de la Librería
 local windowCount = 0
 local activeWindows = {}
 
+-- Contenedor de Notificaciones
 local notifHolder = Instance.new("Frame", sg)
 notifHolder.Size = UDim2.new(0, 220, 1, -40); notifHolder.Position = UDim2.new(0, 10, 0, 10); notifHolder.BackgroundTransparency = 1
 local layout = Instance.new("UIListLayout", notifHolder)
 layout.Padding = UDim.new(0, 8); layout.VerticalAlignment = Enum.VerticalAlignment.Bottom; layout.SortOrder = Enum.SortOrder.LayoutOrder
 
+-- UTILIDADES
 local function attachAnimStroke(parent)
     local s = Instance.new("UIStroke", parent)
-    s.Thickness = 2.5; s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    s.Thickness = 2.5
+    s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    
     local g = Instance.new("UIGradient", s)
-    g.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, COL_BLUE), ColorSequenceKeypoint.new(0.5, COL_CYAN), ColorSequenceKeypoint.new(1, COL_BLUE)})
+    -- Usamos la secuencia exacta del script de Desync
+    g.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0.00, Color3.fromRGB(0, 255, 255)),
+        ColorSequenceKeypoint.new(0.15, Color3.fromRGB(0, 120, 255)),
+        ColorSequenceKeypoint.new(1.00, Color3.fromRGB(0, 255, 255))
+    })
+    
+    -- Animación optimizada y rápida
     task.spawn(function()
+        local rot = 0
         while s and s.Parent do
-            g.Rotation = (g.Rotation + 2) % 360
-            task.wait(0.02)
+            g.Rotation = rot
+            rot = (rot + 3) % 360 -- Incremento de 3 para más fluidez
+            task.wait(0.01) -- Velocidad sincronizada
         end
     end)
     return s
@@ -59,6 +73,7 @@ local function makeDrag(frame)
     end)
 end
 
+-- NOTIFICACIONES
 function LunixLib:Notify(title, text, duration)
     local item = Instance.new("Frame", notifHolder)
     item.BackgroundColor3 = BG_THEME; item.Size = UDim2.new(1, 0, 0, 60); item.BackgroundTransparency = 0.1
@@ -79,13 +94,15 @@ function LunixLib:Notify(title, text, duration)
     end)
 end
 
+-- CREACIÓN DE VENTANA
 function LunixLib:CreateWindow(title, sizeX, sizeY)
     windowCount = windowCount + 1
     sizeX = sizeX or 220
     sizeY = sizeY or 250
     
     local win = {}
-
+    
+    -- Auto-posicionamiento (Evita que se encimen)
     local offsetX = (windowCount - 1) * (sizeX + 20)
     local main = Instance.new("Frame", sg)
     main.Name = title
@@ -109,6 +126,7 @@ function LunixLib:CreateWindow(title, sizeX, sizeY)
     local list = Instance.new("UIListLayout", container)
     list.Padding = UDim.new(0, 8); list.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
+    -- BOTÓN
     function win:Button(text, callback)
         local btn = Instance.new("TextButton", container)
         btn.Size = UDim2.new(1, -10, 0, 32)
@@ -125,6 +143,7 @@ function LunixLib:CreateWindow(title, sizeX, sizeY)
         end)
     end
 
+    -- TOGGLE
     function win:Toggle(text, default, callback)
         local state = default or false
         local btn = Instance.new("TextButton", container)
@@ -143,6 +162,7 @@ function LunixLib:CreateWindow(title, sizeX, sizeY)
         end)
     end
 
+    -- SLIDER (Estilo Steal Speed con Knob)
     function win:Slider(text, min, max, default, callback)
         local holder = Instance.new("Frame", container)
         holder.Size = UDim2.new(1, -10, 0, 40); holder.BackgroundTransparency = 1
@@ -187,15 +207,11 @@ function LunixLib:CreateWindow(title, sizeX, sizeY)
         end)
     end
 
+    -- LABEL / TEXTO
     function win:Label(text)
         local l = Instance.new("TextLabel", container)
-        l.Size = UDim2.new(1,-10,0,20)
-        l.BackgroundTransparency = 1
-        l.Text = text
-        l.Font = Enum.Font.Gotham
-        l.TextColor3 = Color3.new(1,1,1)
-        l.TextSize = UI.TextSize
-        l.TextXAlignment = 0
+        l.Size = UDim2.new(1, -10, 0, 20); l.BackgroundTransparency = 1
+        l.Text = text; l.Font = Enum.Font.Gotham; l.TextColor3 = Color3.new(1,1,1); l.TextSize = 11; l.TextXAlignment = 0
     end
 
     return win
