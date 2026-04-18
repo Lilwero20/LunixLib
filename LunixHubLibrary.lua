@@ -226,5 +226,3 @@ function LunixLib:CreateWindow(title, sizeX, sizeY)
 end
 
 return LunixLib
-
-return LunixLib
