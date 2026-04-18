@@ -14,10 +14,18 @@ local windowCount = 0
 local BG_THEME = Color3.fromRGB(10, 14, 28)
 local COL_CYAN = Color3.fromRGB(0, 255, 255)
 
+local IS_TOUCH = UserInputService.TouchEnabled
+local BUTTON_H = IS_TOUCH and 36 or 32
+local SLIDER_H = IS_TOUCH and 48 or 40
+local TITLE_H = IS_TOUCH and 38 or 35
+local BODY_TEXT = IS_TOUCH and 13 or 12
+
 local sg = Instance.new("ScreenGui")
 sg.Name = "LunixLibrary"
 sg.ResetOnSpawn = false
 sg.DisplayOrder = 999
+sg.IgnoreGuiInset = true
+sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 pcall(function()
 	sg.Parent = CoreGui
@@ -34,11 +42,11 @@ notifHolder.Size = UDim2.new(0, 220, 1, -40)
 notifHolder.Position = UDim2.new(0, 10, 0, 10)
 notifHolder.BackgroundTransparency = 1
 
-local notifLayout = Instance.new("UIListLayout")
-notifLayout.Parent = notifHolder
-notifLayout.Padding = UDim.new(0, 8)
-notifLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
-notifLayout.SortOrder = Enum.SortOrder.LayoutOrder
+local layout = Instance.new("UIListLayout")
+layout.Parent = notifHolder
+layout.Padding = UDim.new(0, 8)
+layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+layout.SortOrder = Enum.SortOrder.LayoutOrder
 
 local function makeStroke(parent)
 	local st = Instance.new("UIStroke")
@@ -72,14 +80,17 @@ end
 
 local attachAnimStroke = makeStroke
 
-local function makeDrag(frame)
+local function makeDrag(frame, handle)
+	handle = handle or frame
+	frame.Active = true
+	handle.Active = true
+	handle.Selectable = true
+
 	local dragging = false
 	local dragStart
 	local startPos
 
-	frame.Active = true
-
-	frame.InputBegan:Connect(function(i)
+	handle.InputBegan:Connect(function(i)
 		if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
 			dragging = true
 			dragStart = i.Position
@@ -87,7 +98,7 @@ local function makeDrag(frame)
 		end
 	end)
 
-	frame.InputChanged:Connect(function(i)
+	handle.InputChanged:Connect(function(i)
 		if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
 			local d = i.Position - dragStart
 			frame.Position = UDim2.new(
@@ -99,7 +110,7 @@ local function makeDrag(frame)
 		end
 	end)
 
-	frame.InputEnded:Connect(function(i)
+	handle.InputEnded:Connect(function(i)
 		if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
 			dragging = false
 		end
@@ -116,6 +127,7 @@ function LunixLib:Notify(title, text, duration)
 	item.Size = UDim2.new(1, 0, 0, 62)
 	item.BackgroundTransparency = 1
 	item.ClipsDescendants = true
+	item.BorderSizePixel = 0
 
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = UDim.new(0, 8)
@@ -138,6 +150,7 @@ function LunixLib:Notify(title, text, duration)
 	top.TextSize = 13
 	top.TextXAlignment = Enum.TextXAlignment.Left
 	top.TextTransparency = 1
+	top.BorderSizePixel = 0
 
 	local body = Instance.new("TextLabel")
 	body.Parent = item
@@ -151,6 +164,7 @@ function LunixLib:Notify(title, text, duration)
 	body.TextWrapped = true
 	body.TextXAlignment = Enum.TextXAlignment.Left
 	body.TextTransparency = 1
+	body.BorderSizePixel = 0
 
 	TweenService:Create(item, TweenInfo.new(0.3), { BackgroundTransparency = 0 }):Play()
 	TweenService:Create(s, TweenInfo.new(0.3), { Transparency = 0.4 }):Play()
@@ -162,7 +176,7 @@ function LunixLib:Notify(title, text, duration)
 			return
 		end
 
-		local out = TweenService:Create(item, TweenInfo.new(0.25), {
+		local out = TweenService:Create(item, TweenInfo.new(0.3), {
 			BackgroundTransparency = 1,
 			Size = UDim2.new(1, 0, 0, 0)
 		})
@@ -177,12 +191,11 @@ end
 
 function LunixLib:CreateWindow(title, sizeX, sizeY)
 	windowCount = windowCount + 1
-	sizeX = tonumber(sizeX) or 220
-	sizeY = tonumber(sizeY) or 250
+	sizeX = tonumber(sizeX) or 240
+	sizeY = tonumber(sizeY) or 280
 	title = tostring(title or "Window")
 
 	local win = {}
-
 	local offsetX = (windowCount - 1) * (sizeX + 20)
 
 	local main = Instance.new("Frame")
@@ -192,34 +205,54 @@ function LunixLib:CreateWindow(title, sizeX, sizeY)
 	main.Position = UDim2.new(0, 50 + offsetX, 0, 100)
 	main.BackgroundColor3 = BG_THEME
 	main.BorderSizePixel = 0
+	main.ClipsDescendants = true
 
 	local mainCorner = Instance.new("UICorner")
 	mainCorner.CornerRadius = UDim.new(0, 12)
 	mainCorner.Parent = main
 
 	attachAnimStroke(main)
-	makeDrag(main)
+
+	local titleBar = Instance.new("Frame")
+	titleBar.Parent = main
+	titleBar.Size = UDim2.new(1, 0, 0, TITLE_H)
+	titleBar.BackgroundTransparency = 1
+	titleBar.BorderSizePixel = 0
+
+	local dragHandle = Instance.new("TextButton")
+	dragHandle.Parent = titleBar
+	dragHandle.Size = UDim2.new(1, 0, 1, 0)
+	dragHandle.BackgroundTransparency = 1
+	dragHandle.Text = ""
+	dragHandle.AutoButtonColor = false
+	dragHandle.BorderSizePixel = 0
 
 	local titleLbl = Instance.new("TextLabel")
-	titleLbl.Parent = main
-	titleLbl.Size = UDim2.new(1, 0, 0, 35)
+	titleLbl.Parent = titleBar
+	titleLbl.Size = UDim2.new(1, -12, 1, 0)
+	titleLbl.Position = UDim2.new(0, 6, 0, 0)
 	titleLbl.BackgroundTransparency = 1
 	titleLbl.Text = title:upper()
 	titleLbl.Font = Enum.Font.GothamBold
 	titleLbl.TextColor3 = COL_CYAN
-	titleLbl.TextSize = 15
+	titleLbl.TextSize = IS_TOUCH and 16 or 15
 	titleLbl.TextXAlignment = Enum.TextXAlignment.Center
+	titleLbl.BorderSizePixel = 0
+
+	makeDrag(main, dragHandle)
 
 	local container = Instance.new("ScrollingFrame")
 	container.Parent = main
-	container.Size = UDim2.new(1, -15, 1, -45)
-	container.Position = UDim2.new(0, 7, 0, 40)
+	container.Size = UDim2.new(1, -15, 1, -(TITLE_H + 10))
+	container.Position = UDim2.new(0, 7, 0, TITLE_H + 5)
 	container.BackgroundTransparency = 1
 	container.BorderSizePixel = 0
 	container.ScrollBarThickness = 2
 	container.ScrollBarImageColor3 = COL_CYAN
-	container.ClipsDescendants = true
 	container.CanvasSize = UDim2.new(0, 0, 0, 0)
+	container.ClipsDescendants = true
+	container.Active = true
+	container.ScrollingDirection = Enum.ScrollingDirection.Y
 
 	local list = Instance.new("UIListLayout")
 	list.Parent = container
@@ -243,11 +276,11 @@ function LunixLib:CreateWindow(title, sizeX, sizeY)
 	function win:Button(text, callback)
 		local btn = Instance.new("TextButton")
 		btn.Parent = container
-		btn.Size = UDim2.new(1, -10, 0, 32)
+		btn.Size = UDim2.new(1, -10, 0, BUTTON_H)
 		btn.BackgroundColor3 = Color3.fromRGB(20, 25, 45)
 		btn.TextColor3 = COL_CYAN
 		btn.Font = Enum.Font.GothamBold
-		btn.TextSize = 12
+		btn.TextSize = IS_TOUCH and 13 or 12
 		btn.Text = tostring(text or "Button")
 		btn.AutoButtonColor = false
 		btn.BorderSizePixel = 0
@@ -266,6 +299,8 @@ function LunixLib:CreateWindow(title, sizeX, sizeY)
 				TextColor3 = COL_CYAN
 			}):Play()
 		end)
+
+		return btn
 	end
 
 	function win:Toggle(text, default, callback)
@@ -273,12 +308,12 @@ function LunixLib:CreateWindow(title, sizeX, sizeY)
 
 		local btn = Instance.new("TextButton")
 		btn.Parent = container
-		btn.Size = UDim2.new(1, -10, 0, 32)
+		btn.Size = UDim2.new(1, -10, 0, BUTTON_H)
 		btn.BackgroundColor3 = Color3.fromRGB(20, 25, 45)
 		btn.TextColor3 = state and COL_CYAN or Color3.fromRGB(150, 150, 150)
 		btn.Text = (state and "●  " or "○  ") .. tostring(text or "Toggle")
 		btn.Font = Enum.Font.GothamBold
-		btn.TextSize = 12
+		btn.TextSize = IS_TOUCH and 13 or 12
 		btn.AutoButtonColor = false
 		btn.BorderSizePixel = 0
 
@@ -292,6 +327,8 @@ function LunixLib:CreateWindow(title, sizeX, sizeY)
 			btn.Text = (state and "●  " or "○  ") .. tostring(text or "Toggle")
 			safeCallback(callback, state)
 		end)
+
+		return btn
 	end
 
 	function win:Slider(text, min, max, default, callback)
@@ -309,8 +346,10 @@ function LunixLib:CreateWindow(title, sizeX, sizeY)
 
 		local holder = Instance.new("Frame")
 		holder.Parent = container
-		holder.Size = UDim2.new(1, -10, 0, 40)
+		holder.Size = UDim2.new(1, -10, 0, SLIDER_H)
 		holder.BackgroundTransparency = 1
+		holder.BorderSizePixel = 0
+		holder.Active = true
 
 		local label = Instance.new("TextLabel")
 		label.Parent = holder
@@ -318,17 +357,19 @@ function LunixLib:CreateWindow(title, sizeX, sizeY)
 		label.BackgroundTransparency = 1
 		label.Text = tostring(text or "Slider") .. ": " .. tostring(default)
 		label.Font = Enum.Font.GothamBold
-		label.TextSize = 11
+		label.TextSize = IS_TOUCH and 12 or 11
 		label.TextColor3 = Color3.fromRGB(200, 220, 255)
 		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.BorderSizePixel = 0
 
 		local bar = Instance.new("Frame")
 		bar.Parent = holder
-		bar.Size = UDim2.new(1, -10, 0, 6)
-		bar.Position = UDim2.new(0.5, 0, 0, 25)
+		bar.Size = UDim2.new(1, -10, 0, 7)
+		bar.Position = UDim2.new(0.5, 0, 0, IS_TOUCH and 29 or 25)
 		bar.AnchorPoint = Vector2.new(0.5, 0)
 		bar.BackgroundColor3 = Color3.fromRGB(12, 16, 32)
 		bar.BorderSizePixel = 0
+		bar.Active = true
 
 		local barCorner = Instance.new("UICorner")
 		barCorner.CornerRadius = UDim.new(1, 0)
@@ -346,7 +387,7 @@ function LunixLib:CreateWindow(title, sizeX, sizeY)
 
 		local knob = Instance.new("Frame")
 		knob.Parent = bar
-		knob.Size = UDim2.fromOffset(12, 12)
+		knob.Size = UDim2.fromOffset(IS_TOUCH and 16 or 12, IS_TOUCH and 16 or 12)
 		knob.AnchorPoint = Vector2.new(0.5, 0.5)
 		knob.Position = UDim2.new((default - min) / (max - min), 0, 0.5, 0)
 		knob.BackgroundColor3 = Color3.new(1, 1, 1)
@@ -390,6 +431,8 @@ function LunixLib:CreateWindow(title, sizeX, sizeY)
 		end)
 
 		safeCallback(callback, default)
+
+		return holder
 	end
 
 	function win:Label(text)
@@ -400,7 +443,7 @@ function LunixLib:CreateWindow(title, sizeX, sizeY)
 		l.Text = tostring(text or "")
 		l.Font = Enum.Font.Gotham
 		l.TextColor3 = Color3.new(1, 1, 1)
-		l.TextSize = 12
+		l.TextSize = BODY_TEXT
 		l.TextXAlignment = Enum.TextXAlignment.Left
 		l.BorderSizePixel = 0
 		l.AutomaticSize = Enum.AutomaticSize.Y
