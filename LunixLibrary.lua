@@ -7,7 +7,6 @@ local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 local player = Players.LocalPlayer
 
--- Configuración Visual (Colores del script Steal Speed)
 local COL_BLUE = Color3.fromRGB(0, 80, 255)
 local COL_CYAN = Color3.fromRGB(0, 210, 255)
 local BG_THEME = Color3.fromRGB(10, 5, 18)
@@ -20,17 +19,14 @@ if not pcall(function() sg.Parent = CoreGui end) then
     sg.Parent = player:WaitForChild("PlayerGui")
 end
 
--- Variables Globales de la Librería
 local windowCount = 0
 local activeWindows = {}
 
--- Contenedor de Notificaciones
 local notifHolder = Instance.new("Frame", sg)
 notifHolder.Size = UDim2.new(0, 220, 1, -40); notifHolder.Position = UDim2.new(0, 10, 0, 10); notifHolder.BackgroundTransparency = 1
 local layout = Instance.new("UIListLayout", notifHolder)
 layout.Padding = UDim.new(0, 8); layout.VerticalAlignment = Enum.VerticalAlignment.Bottom; layout.SortOrder = Enum.SortOrder.LayoutOrder
 
--- UTILIDADES
 local function attachAnimStroke(parent)
     local s = Instance.new("UIStroke", parent)
     s.Thickness = 2.5; s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
@@ -63,7 +59,6 @@ local function makeDrag(frame)
     end)
 end
 
--- NOTIFICACIONES
 function LunixLib:Notify(title, text, duration)
     local item = Instance.new("Frame", notifHolder)
     item.BackgroundColor3 = BG_THEME; item.Size = UDim2.new(1, 0, 0, 60); item.BackgroundTransparency = 0.1
@@ -84,15 +79,13 @@ function LunixLib:Notify(title, text, duration)
     end)
 end
 
--- CREACIÓN DE VENTANA
 function LunixLib:CreateWindow(title, sizeX, sizeY)
     windowCount = windowCount + 1
     sizeX = sizeX or 220
     sizeY = sizeY or 250
     
     local win = {}
-    
-    -- Auto-posicionamiento (Evita que se encimen)
+
     local offsetX = (windowCount - 1) * (sizeX + 20)
     local main = Instance.new("Frame", sg)
     main.Name = title
@@ -116,7 +109,6 @@ function LunixLib:CreateWindow(title, sizeX, sizeY)
     local list = Instance.new("UIListLayout", container)
     list.Padding = UDim.new(0, 8); list.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-    -- BOTÓN
     function win:Button(text, callback)
         local btn = Instance.new("TextButton", container)
         btn.Size = UDim2.new(1, -10, 0, 32)
@@ -133,7 +125,6 @@ function LunixLib:CreateWindow(title, sizeX, sizeY)
         end)
     end
 
-    -- TOGGLE
     function win:Toggle(text, default, callback)
         local state = default or false
         local btn = Instance.new("TextButton", container)
@@ -152,7 +143,6 @@ function LunixLib:CreateWindow(title, sizeX, sizeY)
         end)
     end
 
-    -- SLIDER (Estilo Steal Speed con Knob)
     function win:Slider(text, min, max, default, callback)
         local holder = Instance.new("Frame", container)
         holder.Size = UDim2.new(1, -10, 0, 40); holder.BackgroundTransparency = 1
@@ -197,11 +187,10 @@ function LunixLib:CreateWindow(title, sizeX, sizeY)
         end)
     end
 
-    -- LABEL / TEXTO
     function win:Label(text)
         local l = Instance.new("TextLabel", container)
         l.Size = UDim2.new(1, -10, 0, 20); l.BackgroundTransparency = 1
-        l.Text = text; l.Font = Enum.Font.Gotham; l.TextColor3 = Color3.new(1,1,1); l.TextSize = 11
+        l.Text = text; l.Font = Enum.Font.Gotham; l.TextColor3 = Color3.new(1,1,1); l.TextSize = 11; l.TextXAlignment = 0
     end
 
     return win
