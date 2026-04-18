@@ -176,9 +176,9 @@ function LunixLib:Notify(title, text, duration)
 end
 
 function LunixLib:CreateWindow(title, sizeX, sizeY)
-	windowCount += 1
-	sizeX = sizeX or 220
-	sizeY = sizeY or 250
+	windowCount = windowCount + 1
+	sizeX = tonumber(sizeX) or 220
+	sizeY = tonumber(sizeY) or 250
 	title = tostring(title or "Window")
 
 	local win = {}
