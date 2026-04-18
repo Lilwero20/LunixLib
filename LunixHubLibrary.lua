@@ -211,11 +211,15 @@ function LunixLib:CreateWindow(title, sizeX, sizeY)
         end)
     end
 
-    -- LABEL / TEXTO
     function win:Label(text)
         local l = Instance.new("TextLabel", container)
-        l.Size = UDim2.new(1, -10, 0, 20); l.BackgroundTransparency = 1
-        l.Text = text; l.Font = Enum.Font.Gotham; l.TextColor3 = Color3.new(1,1,1); l.TextSize = 11; l.TextXAlignment = 0
+        l.Size = UDim2.new(1,-10,0,20)
+        l.BackgroundTransparency = 1
+        l.Text = text
+        l.Font = Enum.Font.Gotham
+        l.TextColor3 = Color3.new(1,1,1)
+        l.TextSize = UI.TextSize
+        l.TextXAlignment = 0
     end
 
     return win
